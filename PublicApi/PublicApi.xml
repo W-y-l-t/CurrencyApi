@@ -1,0 +1,219 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PublicApi</name>
+    </assembly>
+    <members>
+        <member name="T:Fuse8.BackendInternship.PublicApi.Controllers.CurrencyController">
+            <summary>
+            Методы для получения актуального курса валют и курса валют в произвольный день
+            </summary>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Controllers.CurrencyController.GetDefaultCurrencyRate(System.Threading.CancellationToken)">
+            <summary>
+            Получить курс валюты по умолчанию (из конфигурации)
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <remarks>
+            Вызывает соответствующий метод InternalApi для базовой валюты
+            и возвращает актуальный курс (округлённый) относительно базовой.
+            </remarks>
+            <response code="200">Успешно возвращает курс валюты по умолчанию</response>
+            <response code="422">Если внешнее API вернуло ошибку о несуществующей валюте</response>
+            <response code="429">Если исчерпан лимит обращений к внешнему API</response>
+            <response code="500">Ошибка при обращении ко внешнему API</response>
+            <response code="503">Ошибка при взаимодействии с RPC</response>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Controllers.CurrencyController.GetCustomCurrencyRate(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Получить курс заданной валюты
+            </summary>
+            <param name="currencyCode">Код валюты</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <remarks>
+            Вызывает соответствующий метод InternalApi для <paramref name="currencyCode"/>.
+            </remarks>
+            <response code="200">Успешно возвращает курс указанной валюты</response>
+            <response code="422">Если указанная валюта не найдена</response>
+            <response code="429">Если исчерпан лимит обращений к внешнему API</response>
+            <response code="500">Ошибка при обращении ко внешнему API</response>
+            <response code="503">Ошибка при взаимодействии с RPC</response>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Controllers.CurrencyController.GetCustomCurrencyRateByDate(System.String,System.DateOnly,System.Threading.CancellationToken)">
+            <summary>
+            Получить курс заданной валюты на определённую дату
+            </summary>
+            <param name="currencyCode">Код валюты</param>
+            <param name="date">Дата в формате yyyy-MM-dd</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <remarks>
+            Вызывает соответствующий метод InternalApi для <paramref name="currencyCode"/> и <paramref name="date"/>.
+            </remarks>
+            <response code="200">Успешно возвращает исторический курс валюты</response>
+            <response code="400">Некорректный формат даты</response>
+            <response code="422">Указанная валюта не найдена</response>
+            <response code="429">Превышен лимит обращений к внешнему API</response>
+            <response code="500">Ошибка при обращении ко внешнему API</response>
+            <response code="503">Ошибка при взаимодействии с RPC</response>
+        </member>
+        <member name="T:Fuse8.BackendInternship.PublicApi.Controllers.SettingsController">
+            <summary>
+            Методы для получения текущих настроек приложения
+            </summary>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Controllers.SettingsController.GetSettings(System.Threading.CancellationToken)">
+            <summary>
+            Получить текущие настройки приложения
+            </summary>
+            <remarks>
+            Возвращает:
+            - текущий курс валют по умолчанию из конфигурации
+            - базовая валюта, относительно которой считается курс
+            - есть ли ещё запросы ко внешнему API
+            - количество знаков после запятой, до которого следует округлять значение курса валют
+            </remarks>
+            <response code="200">Успешно возвращает настройки</response>
+            <response code="503">Ошибка при взаимодействии с RPC</response>
+        </member>
+        <member name="T:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.CurrencyRateDto">
+            <summary>
+            Модель, описывающая текущий курс валюты
+            </summary>
+            <param name="Code">Код валюты</param>
+            <param name="Rate">Числовое значение курса</param>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.CurrencyRateDto.#ctor(System.String,System.Decimal)">
+            <summary>
+            Модель, описывающая текущий курс валюты
+            </summary>
+            <param name="Code">Код валюты</param>
+            <param name="Rate">Числовое значение курса</param>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.CurrencyRateDto.Code">
+            <summary>Код валюты</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.CurrencyRateDto.Rate">
+            <summary>Числовое значение курса</summary>
+        </member>
+        <member name="T:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.HistoricalCurrencyRateDto">
+            <summary>
+            Модель, описывающая исторический курс валюты на определённую дату
+            </summary>
+            <param name="Code">Код валюты</param>
+            <param name="Rate">Значение курса на момент даты</param>
+            <param name="Date">Дата в формате yyyy-MM-dd</param>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.HistoricalCurrencyRateDto.#ctor(System.String,System.Decimal,System.String)">
+            <summary>
+            Модель, описывающая исторический курс валюты на определённую дату
+            </summary>
+            <param name="Code">Код валюты</param>
+            <param name="Rate">Значение курса на момент даты</param>
+            <param name="Date">Дата в формате yyyy-MM-dd</param>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.HistoricalCurrencyRateDto.Code">
+            <summary>Код валюты</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.HistoricalCurrencyRateDto.Rate">
+            <summary>Значение курса на момент даты</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.HistoricalCurrencyRateDto.Date">
+            <summary>Дата в формате yyyy-MM-dd</summary>
+        </member>
+        <member name="T:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.SettingsDto">
+            <summary>
+            Модель, описывающая текущие настройки приложения
+            </summary>
+            <param name="DefaultCurrency">Валюта по умолчанию (например, RUB)</param>
+            <param name="BaseCurrency">Базовая валюта (например, USD)</param>
+            <param name="NewRequestsAvailable">Есть ли ещё запросы ко внешнему API</param>
+            <param name="CurrencyRoundCount">Количество знаков после запятой при округлении</param>
+        </member>
+        <member name="M:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.SettingsDto.#ctor(System.String,System.String,System.Boolean,System.Int32)">
+            <summary>
+            Модель, описывающая текущие настройки приложения
+            </summary>
+            <param name="DefaultCurrency">Валюта по умолчанию (например, RUB)</param>
+            <param name="BaseCurrency">Базовая валюта (например, USD)</param>
+            <param name="NewRequestsAvailable">Есть ли ещё запросы ко внешнему API</param>
+            <param name="CurrencyRoundCount">Количество знаков после запятой при округлении</param>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.SettingsDto.DefaultCurrency">
+            <summary>Валюта по умолчанию (например, RUB)</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.SettingsDto.BaseCurrency">
+            <summary>Базовая валюта (например, USD)</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.SettingsDto.NewRequestsAvailable">
+            <summary>Есть ли ещё запросы ко внешнему API</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.PublicApi.Models.DataTransferObjects.SettingsDto.CurrencyRoundCount">
+            <summary>Количество знаков после запятой при округлении</summary>
+        </member>
+        <member name="T:Fuse8.BackendInternship.PublicApi.Models.Responses.ErrorApiResponse">
+            <summary>
+            Модель ошибки, возвращаемой внешним API при статусе 422
+            </summary>
+        </member>
+        <member name="T:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyReflection">
+            <summary>Holder for reflection information generated from currency.proto</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyReflection.Descriptor">
+            <summary>File descriptor for currency.proto</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.DateOnly.YearFieldNumber">
+            <summary>Field number for the "year" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.DateOnly.MonthFieldNumber">
+            <summary>Field number for the "month" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.DateOnly.DayFieldNumber">
+            <summary>Field number for the "day" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyRequest.CodeFieldNumber">
+            <summary>Field number for the "code" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyOnDateRequest.CodeFieldNumber">
+            <summary>Field number for the "code" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyOnDateRequest.DateFieldNumber">
+            <summary>Field number for the "date" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyResponse.CodeFieldNumber">
+            <summary>Field number for the "code" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyResponse.RateFieldNumber">
+            <summary>Field number for the "rate" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.SettingsResponse.BaseCurrencyCodeFieldNumber">
+            <summary>Field number for the "base_currency_code" field.</summary>
+        </member>
+        <member name="F:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.SettingsResponse.NewRequestAvailableFieldNumber">
+            <summary>Field number for the "new_request_available" field.</summary>
+        </member>
+        <member name="P:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.Descriptor">
+            <summary>Service descriptor</summary>
+        </member>
+        <member name="T:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.CurrencyServiceClient">
+            <summary>Client for CurrencyService</summary>
+        </member>
+        <member name="M:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.CurrencyServiceClient.#ctor(Grpc.Core.ChannelBase)">
+            <summary>Creates a new client for CurrencyService</summary>
+            <param name="channel">The channel to use to make remote calls.</param>
+        </member>
+        <member name="M:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.CurrencyServiceClient.#ctor(Grpc.Core.CallInvoker)">
+            <summary>Creates a new client for CurrencyService that uses a custom <c>CallInvoker</c>.</summary>
+            <param name="callInvoker">The callInvoker to use to make remote calls.</param>
+        </member>
+        <member name="M:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.CurrencyServiceClient.#ctor">
+            <summary>Protected parameterless constructor to allow creation of test doubles.</summary>
+        </member>
+        <member name="M:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.CurrencyServiceClient.#ctor(Grpc.Core.ClientBase.ClientBaseConfiguration)">
+            <summary>Protected constructor to allow creation of configured clients.</summary>
+            <param name="configuration">The client configuration.</param>
+        </member>
+        <member name="M:Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto.CurrencyService.CurrencyServiceClient.NewInstance(Grpc.Core.ClientBase.ClientBaseConfiguration)">
+            <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
+        </member>
+    </members>
+</doc>
