@@ -1,0 +1,117 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option csharp_namespace = "Fuse8.BackendInternship.InternalApi.Grpc.CurrencyProto";
+
+package currency;
+
+/// <summary>
+/// Перечисление кодов валют
+/// </summary>
+enum CurrencyCode {
+  /// <summary>Неизвестный код</summary>
+  UNKNOWN = 0;
+  /// <summary>Доллар США</summary>
+  USD = 1;
+  /// <summary>Российский рубль</summary>
+  RUB = 2;
+  /// <summary>Казахстанский тенге</summary>
+  KZT = 3;
+  /// <summary>Евро</summary>
+  EUR = 4;
+  /// <summary>Британский фунт стерлингов</summary>
+  GBP = 5;
+  /// <summary>Японская иена</summary>
+  JPY = 6;
+  /// <summary>Китайский юань</summary>
+  CNY = 7;
+  /// <summary>Швейцарский франк</summary>
+  CHF = 8;
+  /// <summary>Индийская рупия</summary>
+  INR = 9;
+  /// <summary>Австралийский доллар</summary>
+  AUD = 10;
+}
+
+/// <summary>
+/// Представление даты (без времени)
+/// </summary>
+message DateOnly {
+  /// <summary>Год</summary>
+  int32 year = 1;
+  /// <summary>Месяц</summary>
+  int32 month = 2;
+  /// <summary>День</summary>
+  int32 day = 3;
+}
+
+/// <summary>
+/// Представление значения типа decimal
+/// </summary>
+message DecimalValue {
+  /// <summary>Целая часть значения</summary>
+  int64 units = 1;
+  /// <summary>Дробная часть (в наносекундах)</summary>
+  sfixed32 nanos = 2;
+}
+
+/// <summary>
+/// gRPC-сервис для получения информации о курсах валют
+/// </summary>
+service CurrencyService {
+  /// <summary>
+  /// Получить актуальный курс валюты относительно базовой валюты
+  /// </summary>
+  rpc GetCurrency (CurrencyRequest) returns (CurrencyResponse);
+
+  /// <summary>
+  /// Получить курс валюты на конкретную дату относительно базовой валюты
+  /// </summary>
+  rpc GetCurrencyOnDate (CurrencyOnDateRequest) returns (CurrencyResponse);
+
+  /// <summary>
+  /// Получить настройки API (можно ли выполнять ещё запросы)
+  /// </summary>
+  rpc GetSettings (google.protobuf.Empty) returns (SettingsResponse);
+}
+
+/// <summary>
+/// Запрос для получения курса валюты
+/// </summary>
+message CurrencyRequest {
+  /// <summary>Базовая валюта, относительно которой считается курс</summary>
+  CurrencyCode baseCode = 1;
+  /// <summary>Валюта, курс которой необходимо получить</summary>
+  CurrencyCode code = 2;
+}
+
+/// <summary>
+/// Запрос для получения исторического курса валюты
+/// </summary>
+message CurrencyOnDateRequest {
+  /// <summary>Базовая валюта, относительно которой считается курс</summary>
+  CurrencyCode baseCode = 1;
+  /// <summary>Валюта, курс которой необходимо получить</summary>
+  CurrencyCode code = 2;
+  /// <summary>Дата, на которую требуется получить курс</summary>
+  DateOnly date = 3;
+}
+
+/// <summary>
+/// Ответ, содержащий курс валюты
+/// </summary>
+message CurrencyResponse {
+  /// <summary>Валюта, курс которой был получен</summary>
+  CurrencyCode code = 1;
+  /// <summary>Курс валюты</summary>
+  double rate = 2;
+}
+
+/// <summary>
+/// Ответ, содержащий текущие настройки API
+/// </summary>
+message SettingsResponse {
+  /// <summary>Доступен ли ещё хотя бы один запрос к внешнему API</summary>
+  bool new_request_available = 1;
+}

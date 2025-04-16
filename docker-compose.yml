@@ -1,0 +1,77 @@
+services:
+  postgres:
+    container_name: currency_api_db
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      DATABASE_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:${POSTGRES_PORT}"
+    volumes:
+      - ${HOST_LOGS}currency_api_db/data:${POSTGRES_DATA}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}" ]
+      interval: 30s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+  
+  internal_api:
+    container_name: ${INTERNAL_API_CONTAINER_NAME}
+    image: internship/${INTERNAL_API_CONTAINER_NAME}:dev
+    build:
+      context: .
+      dockerfile: InternalApi/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5888:${INTERNAL_API_CONTAINER_PORT}"
+      - "5889:${INTERNAL_API_GRPC_CONTAINER_PORT}"
+    healthcheck:
+      test: curl --fail http://localhost:${INTERNAL_API_CONTAINER_PORT}/health || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    volumes:
+      - ${HOST_LOGS}internal_api/logs:${INTERNAL_API_CONTAINER_LOGS}
+    environment:
+      - Kestrel__Endpoints__Grpc__Url=http://0.0.0.0:${INTERNAL_API_GRPC_CONTAINER_PORT}
+      - Kestrel__Endpoints__Rest__Url=http://0.0.0.0:${INTERNAL_API_CONTAINER_PORT}
+      - Kestrel__Endpoints__Grpc__Protocols=Http2
+      - Kestrel__Endpoints__Rest__Protocols=Http1
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ConnectionStrings__CurrencyDb=Host=postgres;Port=${POSTGRES_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+  public_api:
+    container_name: ${PUBLIC_API_CONTAINER_NAME}
+    image: internship/${PUBLIC_API_CONTAINER_NAME}:dev
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: PublicApi/Dockerfile
+    ports:
+      - "5887:${PUBLIC_API_CONTAINER_PORT}"
+    healthcheck:
+      test: curl --fail http://localhost:${PUBLIC_API_CONTAINER_PORT}/health || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    volumes:
+      - ${HOST_LOGS}public_api/logs:${PUBLIC_API_CONTAINER_LOGS}
+    environment:
+      - ASPNETCORE_URLS=http://+:${PUBLIC_API_CONTAINER_PORT}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ConnectionStrings__CurrencyDb=Host=postgres;Port=${POSTGRES_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - InternalApi__GrpcUrl=http://${INTERNAL_API_CONTAINER_NAME}:${INTERNAL_API_GRPC_CONTAINER_PORT}
+    depends_on:
+      internal_api:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
