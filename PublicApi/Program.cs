@@ -1,24 +1,25 @@
 using Fuse8.BackendInternship.PublicApi;
+using Fuse8.BackendInternship.PublicApi.DataAccess.DbContexts;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Exceptions;
 using Serilog.Exceptions.Core;
 
-var builder = WebApplication.CreateBuilder(args);
+var app = Host.CreateDefaultBuilder(args)
+    .ConfigureWebHostDefaults(webBuilder => webBuilder
+        .UseStartup<Startup>())
+    .UseSerilog((context, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .Enrich.WithMachineName()
+            .Enrich.FromLogContext()
+            .Enrich.WithExceptionDetails(new DestructuringOptionsBuilder().WithDefaultDestructurers())
+    )
+    .Build();
 
-builder.Host.UseSerilog((context, services, configuration) =>
+using (var scope = app.Services.CreateScope())
 {
-    configuration
-        .ReadFrom.Configuration(builder.Configuration)
-        .Enrich.WithMachineName()
-        .Enrich.FromLogContext()
-        .Enrich.WithExceptionDetails(new DestructuringOptionsBuilder().WithDefaultDestructurers());
-});
-
-var startup = new Startup(builder.Configuration);
-startup.ConfigureServices(builder.Services);
-
-var app = builder.Build();
-
-startup.Configure(app, app.Environment);
+    var db = scope.ServiceProvider.GetRequiredService<FavoriteCurrencyContext>();
+    await db.Database.MigrateAsync();
+}
 
 app.Run();

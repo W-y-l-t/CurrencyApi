@@ -5,6 +5,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{7F1CAA5F-961F-49C8-B0EF-2E18E10D1BAA}"
 	ProjectSection(SolutionItems) = preProject
 		..\ReadMe.md = ..\ReadMe.md
+		docker-compose.yml = docker-compose.yml
+		.env = .env
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InternalApi", "InternalApi\InternalApi.csproj", "{A5B41578-4FF8-434B-827D-1362B4561395}"

@@ -17,6 +17,7 @@ using Fuse8.BackendInternship.PublicApi.Validators;
 using Microsoft.EntityFrameworkCore;
 using Polly;
 using Polly.Extensions.Http;
+using GrpcSettingsValidator = Fuse8.BackendInternship.PublicApi.Validators.GrpcSettingsValidator;
 
 namespace Fuse8.BackendInternship.PublicApi;
 
@@ -31,6 +32,18 @@ public class Startup
 
 	public void ConfigureServices(IServiceCollection services)
 	{
+		services.AddTransient<CurrencySettingsValidator>();
+		services.AddTransient<GrpcSettingsValidator>();
+		
+		services.AddOptions<CurrencySettings>()
+			.Bind(_configuration.GetSection("CurrencySettings"))
+			.ValidateFluent<CurrencySettings, CurrencySettingsValidator>()
+			.ValidateOnStart();
+		services.AddOptions<GrpcSettings>()
+			.Bind(_configuration.GetSection("GrpcSettings"))
+			.ValidateFluent<GrpcSettings, GrpcSettingsValidator>()
+			.ValidateOnStart();
+	
 		services.AddAutoMapper(cfg =>
 		{
 			cfg.AddProfile<CurrencyGrpcTypesMapping>();
@@ -50,7 +63,10 @@ public class Startup
 		services
 			.AddGrpcClient<CurrencyService.CurrencyServiceClient>(options =>
 			{
-				options.Address = new Uri(_configuration["InternalApi:GrpcUrl"] ?? "https://localhost:5889");
+				var url = _configuration.GetSection("GrpcSettings").GetValue<string>("InternalApiUrl") ??
+				          throw new ArgumentException("Missing InternalApiUrl property in configuration");
+				
+				options.Address = new Uri(url);
 			})
 			.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 			{
@@ -96,13 +112,6 @@ public class Startup
 
 			c.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
 		});
-		
-		services.AddTransient<CurrencySettingsValidator>();
-		
-		services.AddOptions<CurrencySettings>()
-			.Bind(_configuration.GetSection("CurrencySettings"))
-			.ValidateFluent<CurrencySettings, CurrencySettingsValidator>()
-			.ValidateOnStart();
 
 		services.AddEndpointsApiExplorer();
 		services.AddSwaggerGen();
@@ -125,12 +134,6 @@ public class Startup
 		app.ApplicationServices.GetRequiredService<AutoMapper.IConfigurationProvider>().AssertConfigurationIsValid();
 
 		app.UseMiddleware<RequestLoggingMiddleware>();
-		
-		using (var scope = app.ApplicationServices.CreateScope())
-		{
-			var db = scope.ServiceProvider.GetRequiredService<FavoriteCurrencyContext>();
-			db.Database.Migrate();
-		}
 
 		app.UseRouting();
 		app.UseEndpoints(endpoints => endpoints.MapControllers());
